@@ -25,8 +25,6 @@ async def on_ready():
 
 
 
-
-
 @client.event
 async def on_member_join(member):
   role = discord.utils.get(member.guild.roles,name="CS Member")
