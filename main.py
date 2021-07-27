@@ -4,7 +4,9 @@ import asyncio
 from discord.ext import commands
 from discord import FFmpegPCMAudio
 from youtube_dl import YoutubeDL
-from discord.utils import get
+from PIL import Image, ImageDraw,ImageFont
+from io import BytesIO
+import numpy as np
 from keep_alive import keep_alive
 import requests
 import json
@@ -15,7 +17,8 @@ from replit import db
 intents = discord.Intents.default()
 intents.members = True
 
-=client = commands.Bot(intents=intents,command_prefix = '!')
+
+client = commands.Bot(intents=intents,command_prefix = '!')
 client.remove_command("help")
 
 players = {}
@@ -33,16 +36,53 @@ async def on_ready():
 
 @client.event
 async def on_member_join(member):
+  welcome = Image.open("welcome.png")
+  
+  asset = member.avatar_url_as(size=128)
+  data = BytesIO(await asset.read())
+  #avatar= Image.open(data)
+  # Open the input image as numpy array, convert to RGB
+  img=Image.open(data).convert("RGB")
+  npImage=np.array(img)
+  h,w=img.size
+
+  # Create same size alpha layer with circle
+  alpha = Image.new('L', img.size,0)
+  draw = ImageDraw.Draw(alpha)
+  draw.pieslice([0,0,h,w],0,360,fill=255)
+
+  # Convert alpha Image to numpy array
+  npAlpha=np.array(alpha)
+
+  # Add alpha layer to RGB
+  npImage=np.dstack((npImage,npAlpha))
+
+  # Save with alpha
+  #Image.fromarray(npImage).save('result.png')
+  avatarr = Image.fromarray(npImage)
+  avatarr = avatarr.resize((74,74))
+  welcome.paste(avatarr,(102,62))
+
+  draw = ImageDraw.Draw(welcome)
+  font = ImageFont.truetype("ARIAL.TTF",30)
+
+  username = str(member.name)
+  W,H = 600,285
+  w,h=draw.textsize(username)
+  draw.text(((W-w)/2-180,(H-h)/2-120), username,(255,153,51), font=font) 
+  #avatar = avatar.resize((74,74))
+  #welcome.paste(avatar,(102,62))
+  welcome.save("final.png")
+
   role = discord.utils.get(member.guild.roles,name="CS Member")
   await member.add_roles(role)
   tag = "<@"+str(member.id)+">"
   tagFozz= "<@378375795892158466>"
   channel = client.get_channel(868904959071113238)
   
-  await channel.send(f"Yooo {tag}, mara7bee biik fi discord el CS !  😎🎉")
-  await member.send(f"Ahlaa ahla {tag}, mara7bee bik fi darek 😍 \n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.facebook.com/cs.esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.instagram.com/ieee.cs.esprit/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.linkedin.com/company/cs-esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttp://computer-esprit.ieee.tn/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nTansanèch fi follow/like ken mech 3amel 👀🤣\nFINALLY, 3andek fekra mte3 event wela project? T7eb t7assenni ?\nMy Master {tagFozz} yestana fik 🤩🤩")
-
-    
+  await channel.send(f"Yooo {tag}, mara7bee biik fi discord el CS !  😎🎉",file=discord.File("final.png"))
+  await member.send(f"Ahlaa ahla {tag}, mara7bee bik fi darek 😍\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.facebook.com/cs.esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.instagram.com/ieee.cs.esprit/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.linkedin.com/company/cs-esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttp://computer-esprit.ieee.tn/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nTansanèch fi follow/like ken mech 3amel 👀🤣\nFINALLY, 3andek fekra mte3 event wela project? T7eb t7assenni ?\nMy Master {tagFozz} yestana fik 🤩🤩")
+ 
 
 @client.event
 async def on_message(message):
@@ -214,7 +254,51 @@ async def stop(ctx):
   players[id].stop()
 
 
+'''@client.command()
+async def welcome(ctx,user = None):
+  if user == None:
+    user=ctx.author
+  welcome = Image.open("welcome.png")
+  
+  asset = ctx.author.avatar_url_as(size=128)
+  data = BytesIO(await asset.read())
+  #avatar= Image.open(data)
+  # Open the input image as numpy array, convert to RGB
+  img=Image.open(data).convert("RGB")
+  npImage=np.array(img)
+  h,w=img.size
 
+  # Create same size alpha layer with circle
+  alpha = Image.new('L', img.size,0)
+  draw = ImageDraw.Draw(alpha)
+  draw.pieslice([0,0,h,w],0,360,fill=255)
+
+  # Convert alpha Image to numpy array
+  npAlpha=np.array(alpha)
+
+  # Add alpha layer to RGB
+  npImage=np.dstack((npImage,npAlpha))
+
+  # Save with alpha
+  #Image.fromarray(npImage).save('result.png')
+  avatarr = Image.fromarray(npImage)
+  avatarr = avatarr.resize((74,74))
+  welcome.paste(avatarr,(102,62))
+
+  draw = ImageDraw.Draw(welcome)
+  font = ImageFont.truetype("ARIAL.TTF",30)
+
+  username = str(ctx.message.author)
+  output = username.split("#",1)[0]
+  W,H = 600,285
+  w,h=draw.textsize(output)
+  draw.text(((W-w)/2-180,(H-h)/2-120), output,(255,153,51), font=font) 
+  #avatar = avatar.resize((74,74))
+  #welcome.paste(avatar,(102,62))
+  welcome.save("final.png")
+  await ctx.send(file=discord.File("final.png"))
+  #await ctx.send(file=discord.File("result.png"))
+'''
 @clear.error
 async def clear_error(ctx, error):
   if isinstance(error, commands.BadArgument):
