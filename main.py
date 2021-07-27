@@ -1,20 +1,24 @@
 import discord
 import os
+import asyncio
 from discord.ext import commands
+from discord import FFmpegPCMAudio
+from youtube_dl import YoutubeDL
+from discord.utils import get
+from keep_alive import keep_alive
 import requests
 import json
 import random
 from replit import db
-from keep_alive import keep_alive
 
 
 intents = discord.Intents.default()
 intents.members = True
 
-#client = discord.Client(intents=intents)
-client = commands.Bot(intents=intents,command_prefix = '!')
+=client = commands.Bot(intents=intents,command_prefix = '!')
+client.remove_command("help")
 
-
+players = {}
 
 
 
@@ -22,6 +26,8 @@ client = commands.Bot(intents=intents,command_prefix = '!')
 async def on_ready():
   print('We have logged in as {0.user}'.format(client)) 
   await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="to my master Fozz"))
+
+
 
 
 
@@ -68,17 +74,22 @@ async def ping(ctx):
 
 
 @client.command(pass_context=True)
-#async def clear_chat(ctx,amount=10):
 async def clear(ctx,amount=10):
+
   channel = ctx.message.channel
   messages = await ctx.history(limit=int(amount)+1).flatten()
 
   if "CS ExCom" in [role.name for role in ctx.message.author.roles]:
     await channel.delete_messages(messages)
     await ctx.send(f"Fassa5tlek {amount} messages")
-      
+        
   else:
     await ctx.send("Ma3endekch access lel command hedhi 🙃")
+  
+
+    
+
+
 
 #Try discord Embed  
 '''
@@ -98,32 +109,123 @@ async def display(ctx):
   await ctx.send(embed=embed)
   '''
 
+@client.command(pass_context=True)
+async def help(ctx):
+  embed = discord.Embed(
+    colour = discord.Colour.orange()
+  )
+  embed.set_author(name="Help")
+  embed.add_field(name="!ping",value="return pong",inline=False)
+  await ctx.send(embed=embed)
+  
 
+@client.command(pass_context=True)
+async def join(ctx):
+  if not ctx.message.author.voice:
+    await ctx.send('you are not connected to a voice channel')
+    return
+
+  else:
+    voice_channel = ctx.author.voice.channel
+  await voice_channel.connect()
+
+    
+
+@client.command(pass_context=True)
+async def leave(ctx):
+  voice_channel = ctx.author.guild.voice_client
+  await voice_channel.disconnect()
+
+@client.command(brief="Plays a single video, from a youtube URL")
+async def play(ctx,url):
+  #stream song
+  server_id = ctx.message.guild.id
+  YDL_OPTIONS = {'format': 'worstaudio/worst', 'noplaylist':'True',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '64',
+        }]}
+
+  FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+  if not ctx.message.author.voice:
+    await ctx.send('Od5el l voice channel w taw nji nsarbik !')
+    return
+  else:
+    voice_channel = ctx.author.voice.channel
+
+  voice = await voice_channel.connect()
+  if not voice.is_playing():
+      with YoutubeDL(YDL_OPTIONS) as ydl:
+        info = ydl.extract_info(url, download=False)
+
+      URL = info['formats'][0]['url']
+      voice.play(FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+      voice.is_playing()
+  else:
+      await ctx.send("Fema ghoneya temchi :v")
+      return
+  players[server_id] = voice
+  
+  while voice.is_playing() or voice.is_paused() :
+    await asyncio.sleep(1)
+  else:
+    await voice.disconnect()
+
+#download song
+'''
+  voice_channel = ctx.author.voice.channel
+  voice = await voice_channel.connect() 
+  YDL_OPTIONS = {
+      'format': 'bestaudio',
+      'postprocessors': [{
+          'key': 'FFmpegExtractAudio',
+          'preferredcodec': 'mp3',
+          'preferredquality': '192',
+      }],
+      'outtmpl': 'song.%(ext)s',
+  }
+
+  with YoutubeDL(YDL_OPTIONS) as ydl:
+      ydl.download("URL", download=True)
+
+  if not voice.is_playing():
+      voice.play(FFmpegPCMAudio("song.mp3"))
+      voice.is_playing()
+      await ctx.send(f"Now playing {url}")
+  else:
+      await ctx.send("Already playing song")
+      return 
+'''
+
+@client.command()
+async def pause(ctx):
+  id = ctx.message.guild.id
+  players[id].pause()
+
+@client.command()
+async def resume(ctx):
+  id = ctx.message.guild.id
+  players[id].resume()
+
+@client.command()
+async def stop(ctx):
+  id = ctx.message.guild.id
+  players[id].stop()
 
 
 
 @clear.error
 async def clear_error(ctx, error):
-  await ctx.send(f"billehi kifeh tconvertih l int 🤨?")
+  if isinstance(error, commands.BadArgument):
+    command = ctx.message.content
+    message = command.split("!clear ",1)[1]
+    await ctx.send(f"billehi kifeh tconverti -{message}- l int 🤨?")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+@play.error
+async def play_error(ctx, error):
+  await ctx.send("Stana dawrek xD")
 
 
 
