@@ -7,10 +7,14 @@ from youtube_dl import YoutubeDL
 from PIL import Image, ImageDraw,ImageFont
 from io import BytesIO
 import numpy as np
+from youtubesearchpython import VideosSearch
+import asyncpraw
+import random
 from keep_alive import keep_alive
+
 import requests
 import json
-import random
+
 from replit import db
 
 
@@ -20,6 +24,18 @@ intents.members = True
 
 client = commands.Bot(intents=intents,command_prefix = '!')
 client.remove_command("help")
+
+reddit = asyncpraw.Reddit(client_id = os.environ['client_id'],
+client_secret = os.environ['client_secret'],
+username= os.environ['username'],
+password=os.environ['password'],
+user_agent="bot")
+
+
+authorised_channel_id_memes=[868903933031104572,870324693494804571,835817984593100840,867890807759831060,870338494923440148]
+
+authorised_channel_id_music= [867880055182589975,868903933031104572,835817984593100840,870338494923440148]
+welcome_channel = 868902567705456661
 
 players = {}
 
@@ -31,6 +47,12 @@ async def on_ready():
   await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="to my master Fozz"))
 
 
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+      await ctx.send("Mnin jebt'ha el command hedhi😅? Type !help to have all the available commands 📑")
+      return
+    raise error
 
 
 
@@ -78,7 +100,8 @@ async def on_member_join(member):
   await member.add_roles(role)
   tag = "<@"+str(member.id)+">"
   tagFozz= "<@378375795892158466>"
-  channel = client.get_channel(868904959071113238)
+  #Select welcome channel !
+  channel = client.get_channel(welcome_channel)
   
   await channel.send(f"Yooo {tag}, mara7bee biik fi discord el CS !  😎🎉",file=discord.File("final.png"))
   await member.send(f"Ahlaa ahla {tag}, mara7bee bik fi darek 😍\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.facebook.com/cs.esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.instagram.com/ieee.cs.esprit/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.linkedin.com/company/cs-esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttp://computer-esprit.ieee.tn/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nTansanèch fi follow/like ken mech 3amel 👀🤣\nFINALLY, 3andek fekra mte3 event wela project? T7eb t7assenni ?\nMy Master {tagFozz} yestana fik 🤩🤩")
@@ -95,24 +118,25 @@ async def on_message(message):
   
   if message.author == client.user:
     return
-  if message.content.startswith('test'):
+  '''if message.content.startswith('test'):
     await message.channel.send(f"mara7beee {tag}  ")
     
     #await channel.send("ahlaaa")
     await usr.send(f"Ahlaa ahla {tag}, mara7bee bik fi darek 😍 \n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.facebook.com/cs.esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.instagram.com/ieee.cs.esprit/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.linkedin.com/company/cs-esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttp://computer-esprit.ieee.tn/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nTansanèch fi follow/like ken mech 3amel 👀🤣\nFINALLY, 3andek fekra mte3 event wela project? T7eb t7assenni ?\nMy Master {tagFozz} yestana fik 🤩🤩")
-  
+'''
+  #log channel
+  log = client.get_channel(867890807759831060)
+  if not message.guild:
+    await log.send(f"{tag}: {message.content}")
+
   await client.process_commands(message)
 
 
-@client.command()
-async def echo(ctx,msg):
-  await ctx.send(msg)
-
+'''
 @client.command()
 async def ping(ctx):
   await ctx.send('Pong!')
-
-
+'''
 @client.command(pass_context=True)
 async def clear(ctx,amount=10):
 
@@ -155,10 +179,16 @@ async def help(ctx):
     colour = discord.Colour.orange()
   )
   embed.set_author(name="Help")
-  embed.add_field(name="!ping",value="return pong",inline=False)
+  embed.add_field(name="!clear",value="nfassa5 el chat",inline=False)
+  embed.add_field(name="!meme",value="nsarbik meme men subreddit, tnajem ta5tar esm el subreddit, default subreddit heya ProgrammerHumor",inline=False)
+  embed.add_field(name="!play",value="n5adem ghna, het esm el gho,aya | link youtube w taw nsarbik",inline=False)
+  embed.add_field(name="!pause",value="npausi laghneya",inline=False)
+  embed.add_field(name="!resume",value="nraja3lek laghneya",inline=False)
+  embed.add_field(name="!stop",value="n7abes laghneya w n5alik wa7dek",inline=False)
+  embed.add_field(name="!leave",value="n5alik wa7dek",inline=False)
   await ctx.send(embed=embed)
   
-
+'''
 @client.command(pass_context=True)
 async def join(ctx):
   if not ctx.message.author.voice:
@@ -169,48 +199,70 @@ async def join(ctx):
     voice_channel = ctx.author.voice.channel
   await voice_channel.connect()
 
-    
+ '''   
 
 @client.command(pass_context=True)
 async def leave(ctx):
-  voice_channel = ctx.author.guild.voice_client
-  await voice_channel.disconnect()
+  if ctx.channel.id in authorised_channel_id_music:
+    voice_channel = ctx.author.guild.voice_client
+    await voice_channel.disconnect()
+  else : 
+    await ctx.send("Sè7bi barra ekteb el command hedhi fi 5oddim-cmd🤬")
 
 @client.command(brief="Plays a single video, from a youtube URL")
-async def play(ctx,url):
-  #stream song
-  server_id = ctx.message.guild.id
-  YDL_OPTIONS = {'format': 'worstaudio/worst', 'noplaylist':'True',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '64',
-        }]}
+async def play(ctx,*url):
+  if ctx.channel.id in authorised_channel_id_music:
+    output=""
+    for word in url:
+      output+=word+" "
 
-  FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-  if not ctx.message.author.voice:
-    await ctx.send('Od5el l voice channel w taw nji nsarbik !')
-    return
-  else:
-    voice_channel = ctx.author.voice.channel
+    videoReq = output.split("&",1)[0]
+    videoSearch = VideosSearch(videoReq, limit = 1,language = 'en', region = 'TN' ) 
+    finalLink = videoSearch.result()['result'][0]['link']
 
-  voice = await voice_channel.connect()
-  if not voice.is_playing():
-      with YoutubeDL(YDL_OPTIONS) as ydl:
-        info = ydl.extract_info(url, download=False)
+    title = videoSearch.result()['result'][0]['title']
+    thumbnail_url = videoSearch.result()['result'][0]['thumbnails'][0]['url']
 
-      URL = info['formats'][0]['url']
-      voice.play(FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
-      voice.is_playing()
-  else:
-      await ctx.send("Fema ghoneya temchi :v")
-      return
-  players[server_id] = voice
+    embed = discord.Embed (title=title)
+    embed.set_image(url=thumbnail_url)
   
-  while voice.is_playing() or voice.is_paused() :
-    await asyncio.sleep(1)
+    #stream song
+    server_id = ctx.message.guild.id
+    YDL_OPTIONS = {'format': 'worstaudio/worst', 'noplaylist':'True',
+          'postprocessors': [{
+              'key': 'FFmpegExtractAudio',
+              'preferredcodec': 'mp3',
+              'preferredquality': '64',
+          }]}
+
+    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+    if not ctx.message.author.voice:
+      await ctx.send('Od5el l voice channel w taw nji nsarbik !')
+      return
+    else:
+      voice_channel = ctx.author.voice.channel
+
+    voice = await voice_channel.connect()
+    if not voice.is_playing():
+        await ctx.send(embed=embed)
+        with YoutubeDL(YDL_OPTIONS) as ydl:
+          info = ydl.extract_info(finalLink, download=False)
+
+        URL = info['formats'][0]['url']
+        voice.play(FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+        voice.is_playing()
+    else:
+        await ctx.send("Fema ghoneya temchi :v")
+        return
+    players[server_id] = voice
+    
+    while voice.is_playing() or voice.is_paused() :
+      await asyncio.sleep(1)
+    else:
+      await voice.disconnect()
   else:
-    await voice.disconnect()
+    await ctx.send("Sè7bi barra ekteb el command hedhi fi 5oddim-cmd🤬")
+
 
 #download song
 '''
@@ -240,18 +292,27 @@ async def play(ctx,url):
 
 @client.command()
 async def pause(ctx):
-  id = ctx.message.guild.id
-  players[id].pause()
+  if ctx.channel.id in authorised_channel_id_music:
+    id = ctx.message.guild.id
+    players[id].pause()
+  else:
+    await ctx.send("Sè7bi barra ekteb el command hedhi fi 5oddim-cmd🤬")
 
 @client.command()
 async def resume(ctx):
-  id = ctx.message.guild.id
-  players[id].resume()
+  if ctx.channel.id in authorised_channel_id_music:
+    id = ctx.message.guild.id
+    players[id].resume()
+  else:
+    await ctx.send("Sè7bi barra ekteb el command hedhi fi 5oddim-cmd🤬")
 
 @client.command()
 async def stop(ctx):
-  id = ctx.message.guild.id
-  players[id].stop()
+  if ctx.channel.id in authorised_channel_id_music:
+    id = ctx.message.guild.id
+    players[id].stop()
+  else:
+    await ctx.send("Sè7bi barra ekteb el command hedhi fi 5oddim-cmd🤬")
 
 
 '''@client.command()
@@ -299,17 +360,49 @@ async def welcome(ctx,user = None):
   await ctx.send(file=discord.File("final.png"))
   #await ctx.send(file=discord.File("result.png"))
 '''
+
+
+@client.command()
+async def meme(ctx,subredditName="ProgrammerHumor"):
+  if ctx.channel.id in authorised_channel_id_memes:
+    #Select meme channel !
+    channel = client.get_channel(870323326587912273)
+    subreddit = await reddit.subreddit(subredditName,fetch=True)
+    all_submissions=[]
+    async for submission in subreddit.top("all"):
+      if "https://i.redd" in submission.url : 
+        all_submissions.append(submission)
+      else:
+        pass
+    
+    random_submission = random.choice(all_submissions)
+    name = random_submission.title
+    url = random_submission.url
+
+    embed = discord.Embed (title=name)
+    embed.set_image (url = url)
+    await ctx.send(embed = embed)
+  else : 
+    await ctx.send("Sè7bi barra ekteb el command hedhi fi memes | 5oddim-cmd🤬")
+
+
+
+
+
+
 @clear.error
 async def clear_error(ctx, error):
   if isinstance(error, commands.BadArgument):
     command = ctx.message.content
     message = command.split("!clear ",1)[1]
     await ctx.send(f"billehi kifeh tconverti -{message}- l int 🤨?")
+  
 
 
 @play.error
 async def play_error(ctx, error):
   await ctx.send("Stana dawrek xD")
+  
 
 
 
