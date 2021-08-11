@@ -152,7 +152,7 @@ async def clear(ctx,amount=10):
 
   channel = ctx.message.channel
   messages = await ctx.history(limit=int(amount)+1).flatten()
-
+  
   if "CS ExCom" in [role.name for role in ctx.message.author.roles]:
     await channel.delete_messages(messages)
     await ctx.send(f"Fassa5tlek {amount} messages")
@@ -193,7 +193,8 @@ async def help(ctx):
   embed.set_image(url = "https://cdn.discordapp.com/attachments/867880055182589975/870346399525535754/img.png")
   #embed.set_author(name="Hedhoum el available commands 7aliyan^^")
   embed.add_field(name="!meme",value="nsarbik meme men subreddit, tnajem ta5tar esm el subreddit, default subreddit heya ProgrammerHumor\n Usage: !meme || !meme esmSubreddit",inline=False)
-  embed.add_field(name="!play",value="n5adem ghna, het esm el gho,aya | link youtube w taw nsarbik\n Usage: !play esmGhonaya || !play linkGhonayaFromYoutube ",inline=False)
+  embed.add_field(name="!poll",value="Poll tak tak, MAX= 11choices\n Usage: !poll choice1 choice2",inline=False)
+  embed.add_field(name="!play",value="n5adem ghna, het esm el ghonaya | link youtube w taw nsarbik\n Usage: !play esmGhonaya || !play linkGhonayaFromYoutube ",inline=False)
   embed.add_field(name="!pause",value="npausi laghneya",inline=False)
   embed.add_field(name="!resume",value="nraja3lek laghneya",inline=False)
   embed.add_field(name="!stop",value="n7abes laghneya w n5alik wa7dek",inline=False)
@@ -328,6 +329,9 @@ async def stop(ctx):
     await placement_error(ctx)
 
 
+
+
+
 '''@client.command()
 async def welcome(ctx,user = None):
   if user == None:
@@ -400,6 +404,32 @@ async def meme(ctx,subredditName="ProgrammerHumor"):
 
 
 @client.command()
+async def poll(ctx,*args):
+  if ctx.channel.id in authorised_channel_id_memes:
+    emoji_list=["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
+    channel = ctx.message.channel
+    messages = await ctx.history(limit=1).flatten()
+    await channel.delete_messages(messages)
+    embed = discord.Embed(
+      title= "Heya a5tar 🤔?",
+      colour= discord.Colour.red()
+    )
+    used_emojis=[]
+    i=0
+    for word in args:
+      #embed.add_field(name=f"{emoji_list[i]}",value =f"{word}" ,inline=False)
+      embed.add_field(name=f"{emoji_list[i]}\t{word}",value="\u200b" ,inline=False)
+      used_emojis.append(emoji_list[i])
+      i+=1
+
+    message = await ctx.send(embed=embed)
+    for emoji in used_emojis:
+      await message.add_reaction(emoji)
+  else:
+    await placement_error(ctx)
+
+
+@client.command()
 async def jaweb(ctx,id,*args):
 
   member = await client.fetch_user(id)
@@ -437,12 +467,15 @@ async def clear_error(ctx, error):
   
 @meme.error
 async def meme_error(ctx, error):
-  if isinstance(error, commands.errors.CommandInvokeError):
-    await ctx.send("Mnin jebt'ha el subreddit hedhi? xD")
+  await ctx.send("Mnin jebt'ha el subreddit hedhi? xD")
 
 @play.error
 async def play_error(ctx, error):
   await ctx.send("Stana dawrek xD")
+
+@poll.error
+async def poll_error(ctx, error):
+  await ctx.send("Sadly el max mte3i 11 choices 😓")
   
 
 
