@@ -12,12 +12,14 @@ import asyncpraw
 import random
 from keep_alive import keep_alive
 #from DriveAPI import fetchData
+"""import httplib2
+import pprint
+import sys"""
+
+from apiclient.discovery import build
 import httplib2
 import pprint
 import sys
-
-from apiclient.discovery import build
-
 
 
 intents = discord.Intents.default()
@@ -71,7 +73,7 @@ async def placement_error_meme(ctx):
 @client.event
 async def on_ready():
   print('We have logged in as {0.user}'.format(client)) 
-  await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="to my master Fozz"))
+  await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="my master Fozz"))
 
 
 @client.event
@@ -132,8 +134,68 @@ async def on_member_join(member):
   
   await channel.send(f"Yooo {tag}, mara7bee biik fi discord el CS !  😎🎉. Ekteb !help bech ta3ref chnewa enajem nsarbik 7aliyan.",file=discord.File("final.png"))
   await member.send(f"Ahlaa ahla {tag}, mara7bee bik fi darek 😍\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.facebook.com/cs.esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.instagram.com/cs.esprit/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttps://www.linkedin.com/company/cs-esprit\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nhttp://computer-esprit.ieee.tn/\n●▬▬▬▬▬▬▬▬●●▬▬▬▬▬▬▬▬●\nTansanèch fi follow/like ken mech 3amel 👀🤣\nFINALLY, 3andek fekra mte3 event wela project? T7eb t7assenni ?\nMy Master Fozz yestana fik 🤩🤩")
- 
+  
+'''
+@client.event
+async def on_reaction_add(reaction, user):
+  ChID = 877904447257333810
+  guild_id=867880055182589972
+  guild= client.get_guild(guild_id)
+  if reaction.message.channel.id != ChID:
+    return
+  if user.id != 868866260899885066:
+    if reaction.emoji == "0️⃣":
+      roleSB = discord.utils.get(guild.roles, name="SB ExCom")
+      await user.add_roles(roleSB)
+    elif reaction.emoji == "1️⃣":
+      roleCS = discord.utils.get(guild.roles, name="CS ExCom")
+      await user.add_roles(roleCS)
+    elif  reaction.emoji == "2️⃣":
+      roleIAS = discord.utils.get(guild.roles, name="IAS ExCom")
+      await user.add_roles(roleIAS)
+    elif  reaction.emoji == "3️⃣":
+      roleWIE = discord.utils.get(guild.roles, name="WIE ExCom")
+      await user.add_roles(roleWIE)
+    elif  reaction.emoji == "4️⃣":
+      roleSIGHT = discord.utils.get(guild.roles, name="SIGHT ExCom")
+      await user.add_roles(roleSIGHT)
+    elif  reaction.emoji == "5️⃣":
+      rolePES = discord.utils.get(guild.roles, name="PES ExCom")
+      await user.add_roles(rolePES)
+    elif  reaction.emoji == "6️⃣":
+      roleRAS = discord.utils.get(guild.roles, name="RAS ExCom")
+      await user.add_roles(roleRAS)
 
+@client.event
+async def on_reaction_remove(reaction, user):
+  ChID = 877904447257333810
+  guild_id=867880055182589972
+  guild= client.get_guild(guild_id)
+  if reaction.message.channel.id != ChID:
+    return
+  if user.id != 868866260899885066:
+    if reaction.emoji == "0️⃣":
+      roleSB = discord.utils.get(guild.roles, name="SB ExCom")
+      await user.remove_roles(roleSB)
+    elif reaction.emoji == "1️⃣":
+      roleCS = discord.utils.get(guild.roles, name="CS ExCom")
+      await user.remove_roles(roleCS)
+    elif  reaction.emoji == "2️⃣":
+      roleIAS = discord.utils.get(guild.roles, name="IAS ExCom")
+      await user.remove_roles(roleIAS)
+    elif  reaction.emoji == "3️⃣":
+      roleWIE = discord.utils.get(guild.roles, name="WIE ExCom")
+      await user.remove_roles(roleWIE)
+    elif  reaction.emoji == "4️⃣":
+      roleSIGHT = discord.utils.get(guild.roles, name="SIGHT ExCom")
+      await user.remove_roles(roleSIGHT)
+    elif  reaction.emoji == "5️⃣":
+      rolePES = discord.utils.get(guild.roles, name="PES ExCom")
+      await user.remove_roles(rolePES)
+    elif  reaction.emoji == "6️⃣":
+      roleRAS = discord.utils.get(guild.roles, name="RAS ExCom")
+      await user.remove_roles(roleRAS)
+'''
 @client.event
 async def on_message(message):
   my_id= message.author.id
@@ -159,11 +221,6 @@ async def on_message(message):
   await client.process_commands(message)
 
 
-'''
-@client.command()
-async def ping(ctx):
-  await ctx.send('Pong!')
-'''
 @client.command(pass_context=True)
 async def clear(ctx,amount=10):
 
@@ -444,6 +501,32 @@ async def poll(ctx,*args):
       await message.add_reaction(emoji)
   else:
     await placement_error(ctx)
+'''
+@client.command()
+async def roleExcom(ctx):
+    channel = ctx.message.channel
+    messages = await ctx.history(limit=1).flatten()
+    await channel.delete_messages(messages)
+    embed = discord.Embed(
+      title= "Choose your role 🤔?",
+      colour= discord.Colour.orange()
+    )
+    used_emojis=["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣"]
+
+ 
+    embed.add_field(name=f"0️⃣\t SB ExCom",value="\u200b" ,inline=False)
+    embed.add_field(name=f"1️⃣\t CS ExCom",value="\u200b" ,inline=False)
+    embed.add_field(name=f"2️⃣\t IAS ExCom",value="\u200b" ,inline=False)
+    embed.add_field(name=f"3️⃣\t WIE ExCom",value="\u200b" ,inline=False)
+    embed.add_field(name=f"4️⃣\t SIGHT ExCom",value="\u200b" ,inline=False)
+    embed.add_field(name=f"5️⃣\t PES ExCom",value="\u200b" ,inline=False)
+    embed.add_field(name=f"6️⃣\t RAS ExCom",value="\u200b" ,inline=False)
+
+    message = await ctx.send(embed=embed)
+    for emoji in used_emojis:
+      await message.add_reaction(emoji)
+    '''
+
 
 
 @client.command()
