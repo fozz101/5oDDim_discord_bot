@@ -11,11 +11,13 @@ from youtubesearchpython import VideosSearch
 import asyncpraw
 import random
 from keep_alive import keep_alive
-from DriveAPI import fetchData
-import requests
-import json
+#from DriveAPI import fetchData
+import httplib2
+import pprint
+import sys
 
-from replit import db
+from apiclient.discovery import build
+
 
 
 intents = discord.Intents.default()
@@ -38,6 +40,21 @@ authorised_channel_id_music= [867880055182589975,868903933031104572,835817984593
 welcome_channel = 868902567705456661
 
 players = {}
+
+async def fetchData(parent):
+  Drive_API_KEY = os.environ['Drive_API_KEY'] # get from API->Credentials page in console.cloud.googl.com
+  FOLDER_ID = '1qnwBSeOmrv9vxtRif_DuPpSr0H3vMCZu' # NOTE: folder must be publicly visible when using an API key.
+  service = build('drive', 'v3', developerKey=Drive_API_KEY)
+  
+  
+  param = {"q": "'" + parent + "' in parents and mimeType != 'application/vnd.google-apps.folder'"}
+  result = service.files().list(**param).execute()
+  files = result.get('files')
+  filesList=[]
+  for afile in files:
+    filesList.append(afile)
+    #print('File {}'.format(afile.get('name')))
+  return filesList
 
 async def placement_error(ctx):
   await ctx.send("Sè7bi barra ekteb el command hedhi fi 5oddim-cmd🤬")
