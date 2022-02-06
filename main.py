@@ -12,15 +12,10 @@ import asyncpraw
 import random
 from keep_alive import keep_alive
 #from DriveAPI import fetchData
-"""import httplib2
-import pprint
-import sys"""
-
-from apiclient.discovery import build
-import httplib2
+#import httplib2
 import pprint
 import sys
-
+import facebook
 
 intents = discord.Intents.default()
 intents.members = True
@@ -35,15 +30,22 @@ username= os.environ['username'],
 password=os.environ['password'],
 user_agent="bot")
 
+graph=facebook.GraphAPI(os.environ['facebook_key'])
+lastPost=graph.get_object(id="1861798347201909", fields="posts")["posts"]["data"][0]
+postID=lastPost["id"]
+postMessage=lastPost["message"]
+postImageLink = graph.get_object(id=postID, fields="full_picture")["full_picture"]
 
-authorised_channel_id_memes=[868903933031104572,870324693494804571,835817984593100840,867890807759831060,870338494923440148,870404449699528714,873297121548337152]
+postUrl="https://www.facebook.com/cs.esprit/posts/"+postID.split("_")[1]
 
-authorised_channel_id_music= [867880055182589975,868903933031104572,835817984593100840,870338494923440148,870404449699528714,873297121548337152]
+authorised_channel_id_memes=[919272353551253505,917855774280130580,867880055182589975,868903933031104572,835817984593100840,868903933031104572,870324693494804571,835817984593100840,867890807759831060,870338494923440148,870404449699528714,873297121548337152,878004548315275336]
+
+authorised_channel_id_music= [919272353551253505,917855774280130580,867880055182589975,868903933031104572,835817984593100840,870338494923440148,870404449699528714,873297121548337152,878004548315275336]
 welcome_channel = 868902567705456661
 
 players = {}
 
-async def fetchData(parent):
+'''async def fetchData(parent):
   Drive_API_KEY = os.environ['Drive_API_KEY'] # get from API->Credentials page in console.cloud.googl.com
   FOLDER_ID = '1qnwBSeOmrv9vxtRif_DuPpSr0H3vMCZu' # NOTE: folder must be publicly visible when using an API key.
   service = build('drive', 'v3', developerKey=Drive_API_KEY)
@@ -56,7 +58,7 @@ async def fetchData(parent):
   for afile in files:
     filesList.append(afile)
     #print('File {}'.format(afile.get('name')))
-  return filesList
+  return filesList'''
 
 async def placement_error(ctx):
   await ctx.send("Sè7bi barra ekteb el command hedhi fi 5oddim-cmd🤬")
@@ -274,7 +276,21 @@ async def help(ctx):
   embed.add_field(name="!stop",value="n7abes laghneya w n5alik wa7dek",inline=False)
   embed.add_field(name="!leave",value="n5alik wa7dek",inline=False)
   embed.add_field(name="!clear",value="nfassa5 el chat, mech ay wa7ed enajem yesta3mel el command hedhi :v",inline=False)
+  embed.add_field(name="!fetchFb",value="Fetch latest Facebook post, tansach hakel react xD",inline=False)
   await ctx.send(embed=embed)
+
+@client.command(pass_context=True)
+async def fetchFb(ctx):
+  embed = discord.Embed(
+    title= "New Facebook Post!",
+    description="@everyone Tansech hakel react 👀",
+    colour = discord.Colour.orange()
+  )
+  embed.set_image(url =postImageLink)
+  #embed.set_author(name="Hedhoum el available commands 7aliyan^^")
+  embed.add_field(name="Caption",value="[LINK]("+str(postUrl)+")\n"+postMessage,inline=False)
+  await ctx.send('@everyone')
+  await ctx.send(embed=embed)  
   
 '''
 @client.command(pass_context=True)
